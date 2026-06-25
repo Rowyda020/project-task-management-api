@@ -1,10 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "../filters/error.filter";
+import { UserRole } from "../../users/enums/user-role.enum";
 
 type AccessTokenPayload = {
   sub: string;
   email: string;
+  role?: UserRole;
 };
 
 function requireEnv(name: string): string {
@@ -29,6 +31,7 @@ export function authGuard(req: Request, _res: Response, next: NextFunction): voi
     req.user = {
       id: payload.sub,
       email: payload.email,
+      role: payload.role ?? UserRole.MEMBER,
     };
 
     next();
