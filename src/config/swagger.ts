@@ -68,7 +68,25 @@ const options: swaggerJsdoc.Options = {
             id: { type: "string", format: "uuid" },
             name: { type: "string", example: "Jane Doe" },
             email: { type: "string", format: "email", example: "jane@example.com" },
+            role: { type: "string", enum: ["admin", "member"], example: "member" },
             createdAt: { type: "string", format: "date-time" },
+          },
+        },
+        UpdateUserRoleRequest: {
+          type: "object",
+          required: ["role"],
+          properties: {
+            role: { type: "string", enum: ["admin", "member"], example: "admin" },
+          },
+        },
+        PaginatedUsersResponse: {
+          type: "object",
+          properties: {
+            data: {
+              type: "array",
+              items: { $ref: "#/components/schemas/UserResponse" },
+            },
+            meta: { $ref: "#/components/schemas/PaginationMeta" },
           },
         },
         CreateProjectRequest: {
@@ -108,6 +126,25 @@ const options: swaggerJsdoc.Options = {
               enum: ["in progress", "completed", "cancelled"],
               example: "in progress",
             },
+          },
+        },
+        PaginationMeta: {
+          type: "object",
+          properties: {
+            page: { type: "integer", example: 1 },
+            limit: { type: "integer", example: 10 },
+            total: { type: "integer", example: 42 },
+            totalPages: { type: "integer", example: 5 },
+          },
+        },
+        PaginatedProjectsResponse: {
+          type: "object",
+          properties: {
+            data: {
+              type: "array",
+              items: { $ref: "#/components/schemas/ProjectResponse" },
+            },
+            meta: { $ref: "#/components/schemas/PaginationMeta" },
           },
         },
         CreateTaskRequest: {
@@ -165,6 +202,16 @@ const options: swaggerJsdoc.Options = {
               example: "high",
             },
             dueDate: { type: "string", format: "date-time", example: "2026-12-31T00:00:00.000Z" },
+          },
+        },
+        PaginatedTasksResponse: {
+          type: "object",
+          properties: {
+            data: {
+              type: "array",
+              items: { $ref: "#/components/schemas/TaskResponse" },
+            },
+            meta: { $ref: "#/components/schemas/PaginationMeta" },
           },
         },
       },
