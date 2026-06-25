@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 import { AppError } from "../../common/filters/error.filter";
+import { UserRole } from "../../users/enums/user-role.enum";
 import { usersService } from "../../users/services/users.service";
 import { LoginInput } from "../dto/login.dto";
 import { RegisterInput } from "../dto/register.dto";
@@ -17,6 +18,14 @@ function getSaltRounds(): number {
   return parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10);
 }
 
+function getRegistrationRole(email: string): UserRole {
+  const bootstrapEmail = process.env.BOOTSTRAP_ADMIN_EMAIL;
+  if (bootstrapEmail && email.toLowerCase() === bootstrapEmail.toLowerCase()) {
+    return UserRole.ADMIN;
+  }
+  return UserRole.MEMBER;
+}
+
 export class AuthService {
   async register(input: RegisterInput) {
     const existingUser = await usersService.findByEmail(input.email);
@@ -29,6 +38,7 @@ export class AuthService {
       name: input.name,
       email: input.email,
       passwordHash,
+      role: getRegistrationRole(input.email),
     });
 
     return user;
@@ -50,7 +60,7 @@ export class AuthService {
     };
 
     const accessToken = jwt.sign(
-      { sub: user.id, email: user.email },
+      { sub: user.id, email: user.email, role: user.role },
       requireEnv("JWT_SECRET"),
       signOptions,
     );

@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from "typeorm";
 import { Project } from "../../projects/models/project.entity";
+import { UserRole } from "../enums/user-role.enum";
 
 @Entity("users")
 export class User {
@@ -14,6 +15,9 @@ export class User {
 
   @Column()
   password!: string;
+
+  @Column({ type: "enum", enum: UserRole, default: UserRole.MEMBER })
+  role!: UserRole;
 
   @CreateDateColumn({ type: "timestamp" })
   createdAt!: Date;

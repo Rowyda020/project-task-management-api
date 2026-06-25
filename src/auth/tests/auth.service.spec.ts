@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { AppError } from "../../common/filters/error.filter";
+import { UserRole } from "../../users/enums/user-role.enum";
 import { usersService } from "../../users/services/users.service";
 import { AuthService } from "../services/auth.service";
 
@@ -51,6 +52,7 @@ describe("AuthService", () => {
         id: "user-id",
         name: registerInput.name,
         email: registerInput.email,
+        role: UserRole.MEMBER,
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
       };
 
@@ -66,6 +68,7 @@ describe("AuthService", () => {
         name: registerInput.name,
         email: registerInput.email,
         passwordHash: "hashed-password",
+        role: UserRole.MEMBER,
       });
       expect(result).toEqual(createdUser);
     });
@@ -76,6 +79,7 @@ describe("AuthService", () => {
         name: "Existing User",
         email: registerInput.email,
         password: "hashed-password",
+        role: UserRole.MEMBER,
         createdAt: new Date(),
         projects: [],
       });
@@ -95,6 +99,7 @@ describe("AuthService", () => {
       name: "Jane Doe",
       email: loginInput.email,
       password: "hashed-password",
+      role: UserRole.MEMBER,
       createdAt: new Date(),
       projects: [],
     };
@@ -112,7 +117,7 @@ describe("AuthService", () => {
         storedUser.password,
       );
       expect(mockedJwt.sign).toHaveBeenCalledWith(
-        { sub: storedUser.id, email: storedUser.email },
+        { sub: storedUser.id, email: storedUser.email, role: storedUser.role },
         "test-secret",
         { expiresIn: "1d" },
       );

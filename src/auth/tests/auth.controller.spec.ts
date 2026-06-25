@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { UserRole } from "../../users/enums/user-role.enum";
 import { AuthController } from "../controllers/auth.controller";
 import { authService } from "../services/auth.service";
 
@@ -39,6 +40,7 @@ describe("AuthController", () => {
         id: "user-id",
         name: "test user",
         email: "test@gmail.com",
+        role: UserRole.MEMBER,
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
       };
 
