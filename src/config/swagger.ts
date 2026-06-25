@@ -13,7 +13,7 @@ const options: swaggerJsdoc.Options = {
       title: "Project & Task Management API",
       version: "1.0.0",
       description:
-        "RESTful API for managing projects and tasks with JWT authentication.",
+        "Use **Try it out** on an endpoint — the Server response section shows the actual status and body from your request.",
     },
     servers: [
       {
@@ -33,17 +33,7 @@ const options: swaggerJsdoc.Options = {
         HealthResponse: {
           type: "object",
           properties: {
-            status: {
-              type: "string",
-              example: "ok",
-            },
-          },
-        },
-        ErrorResponse: {
-          type: "object",
-          properties: {
-            statusCode: { type: "integer", example: 400 },
-            message: { type: "string", example: "Bad Request" },
+            status: { type: "string", example: "ok" },
           },
         },
         RegisterRequest: {
@@ -79,6 +69,45 @@ const options: swaggerJsdoc.Options = {
             name: { type: "string", example: "Jane Doe" },
             email: { type: "string", format: "email", example: "jane@example.com" },
             createdAt: { type: "string", format: "date-time" },
+          },
+        },
+        CreateProjectRequest: {
+          type: "object",
+          required: ["title", "description", "status"],
+          properties: {
+            title: { type: "string", maxLength: 255, example: "Website Redesign" },
+            description: { type: "string", example: "Rebuild the company website" },
+            status: {
+              type: "string",
+              enum: ["in progress", "completed", "cancelled"],
+              example: "in progress",
+            },
+          },
+        },
+        UpdateProjectRequest: {
+          type: "object",
+          minProperties: 1,
+          properties: {
+            title: { type: "string", maxLength: 255, example: "Website Redesign v2" },
+            description: { type: "string", example: "Updated project scope" },
+            status: {
+              type: "string",
+              enum: ["in progress", "completed", "cancelled"],
+              example: "completed",
+            },
+          },
+        },
+        ProjectResponse: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            title: { type: "string", example: "Website Redesign" },
+            description: { type: "string", example: "Rebuild the company website" },
+            status: {
+              type: "string",
+              enum: ["in progress", "completed", "cancelled"],
+              example: "in progress",
+            },
           },
         },
       },

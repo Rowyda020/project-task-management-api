@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { asyncHandler } from "../../common/middleware/async-handler";
 import { validate } from "../../common/middleware/validate";
+import { authController } from "../controllers/auth.controller";
 import { loginSchema } from "../dto/login.dto";
 import { registerSchema } from "../dto/register.dto";
-import { authController } from "../controllers/auth.controller";
 
 const authRoutes = Router();
 
@@ -11,34 +11,19 @@ const authRoutes = Router();
  * @openapi
  * /auth/register:
  *   post:
- *     tags:
- *       - Auth
+ *     tags: [Auth]
  *     summary: Register a new user
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/RegisterRequest'
  *     responses:
  *       201:
- *         description: User created successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/UserResponse'
- *       400:
- *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       409:
- *         description: Email already registered
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 authRoutes.post(
   "/register",
@@ -50,34 +35,19 @@ authRoutes.post(
  * @openapi
  * /auth/login:
  *   post:
- *     tags:
- *       - Auth
- *     summary: Login and receive a JWT access token
+ *     tags: [Auth]
+ *     summary: Login
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
  *       200:
- *         description: Login successful
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/LoginResponse'
- *       400:
- *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       401:
- *         description: Invalid credentials
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 authRoutes.post(
   "/login",
