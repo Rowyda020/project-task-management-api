@@ -69,14 +69,37 @@ taskRoutes.post(
  *         schema:
  *           type: string
  *           enum: [low, medium, high]
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [title, status, priority, dueDate]
+ *           default: dueDate
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: asc
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/TaskResponse'
+ *               $ref: '#/components/schemas/PaginatedTasksResponse'
  */
 taskRoutes.get(
   "/",

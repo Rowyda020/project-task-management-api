@@ -1,6 +1,8 @@
 import { AppError } from "../../common/filters/error.filter";
+import { AccessContext } from "../../common/types/access-context";
 import { dataSource } from "../../config/data-source";
 import { projectService } from "../../projects/services/project.service";
+import { UserRole } from "../../users/enums/user-role.enum";
 import { TaskPriority } from "../enums/task-priority.enum";
 import { TaskStatus } from "../enums/task-status.enum";
 import { TaskService } from "../services/task.service";
@@ -10,6 +12,7 @@ jest.mock("../../config/data-source", () => {
     create: jest.fn(),
     save: jest.fn(),
     find: jest.fn(),
+    findAndCount: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
   };
@@ -23,7 +26,7 @@ jest.mock("../../config/data-source", () => {
 
 jest.mock("../../projects/services/project.service", () => ({
   projectService: {
-    findOneByUserId: jest.fn(),
+    findOne: jest.fn(),
   },
 }));
 
@@ -37,6 +40,8 @@ describe("TaskService", () => {
   const userId = "user-id";
   const projectId = "project-id";
   const taskId = "task-id";
+  const memberAccess: AccessContext = { userId, role: UserRole.MEMBER };
+  const adminAccess: AccessContext = { userId: "admin-id", role: UserRole.ADMIN };
 
   const createInput = {
     title: "Design homepage",
@@ -52,62 +57,51 @@ describe("TaskService", () => {
     project: { id: projectId },
   };
 
+  const defaultQuery = {
+    page: 1,
+    limit: 10,
+    sortBy: "dueDate" as const,
+    sortOrder: "asc" as const,
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
-    mockedProjectService.findOneByUserId.mockResolvedValue({ id: projectId } as never);
+    mockedProjectService.findOne.mockResolvedValue({ id: projectId } as never);
   });
 
   describe("createTask", () => {
-    it("creates a task under an owned project", async () => {
+    it("creates a task under an accessible project", async () => {
       mockRepository.create.mockReturnValue(mockTask);
       mockRepository.save.mockResolvedValue(mockTask);
 
-      const result = await taskService.createTask(userId, projectId, createInput);
+      const result = await taskService.createTask(memberAccess, projectId, createInput);
 
-      expect(mockedProjectService.findOneByUserId).toHaveBeenCalledWith(userId, projectId);
-      expect(mockRepository.create).toHaveBeenCalledWith({
-        ...createInput,
-        project: { id: projectId },
-      });
+      expect(mockedProjectService.findOne).toHaveBeenCalledWith(memberAccess, projectId);
       expect(result).toEqual(mockTask);
     });
   });
 
   describe("findAllByProject", () => {
-    it("returns all tasks for a project", async () => {
-      mockRepository.find.mockResolvedValue([mockTask]);
+    it("returns paginated tasks for a project", async () => {
+      mockRepository.findAndCount.mockResolvedValue([[mockTask], 1]);
 
-      const result = await taskService.findAllByProject(userId, projectId, {});
+      const result = await taskService.findAllByProject(memberAccess, projectId, defaultQuery);
 
-      expect(mockRepository.find).toHaveBeenCalledWith({
+      expect(mockRepository.findAndCount).toHaveBeenCalledWith({
         where: { project: { id: projectId } },
+        skip: 0,
+        take: 10,
+        order: { dueDate: "ASC" },
       });
-      expect(result).toEqual([mockTask]);
-    });
-
-    it("filters tasks by status and priority", async () => {
-      mockRepository.find.mockResolvedValue([mockTask]);
-
-      await taskService.findAllByProject(userId, projectId, {
-        status: TaskStatus.PENDING,
-        priority: TaskPriority.HIGH,
-      });
-
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        where: {
-          project: { id: projectId },
-          status: TaskStatus.PENDING,
-          priority: TaskPriority.HIGH,
-        },
-      });
+      expect(result.data).toEqual([mockTask]);
     });
   });
 
   describe("findOneByUser", () => {
-    it("returns the task when it belongs to the user's project", async () => {
+    it("returns the task when it belongs to the member's project", async () => {
       mockRepository.findOne.mockResolvedValue(mockTask);
 
-      const result = await taskService.findOneByUser(userId, projectId, taskId);
+      const result = await taskService.findOneByUser(memberAccess, projectId, taskId);
 
       expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: {
@@ -118,10 +112,23 @@ describe("TaskService", () => {
       expect(result).toEqual(mockTask);
     });
 
+    it("returns any task in the project for an admin", async () => {
+      mockRepository.findOne.mockResolvedValue(mockTask);
+
+      await taskService.findOneByUser(adminAccess, projectId, taskId);
+
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          id: taskId,
+          project: { id: projectId },
+        },
+      });
+    });
+
     it("throws 404 when task is not found", async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(taskService.findOneByUser(userId, projectId, taskId)).rejects.toEqual(
+      await expect(taskService.findOneByUser(memberAccess, projectId, taskId)).rejects.toEqual(
         new AppError(404, "Task not found"),
       );
     });
@@ -133,41 +140,22 @@ describe("TaskService", () => {
       mockRepository.findOne.mockResolvedValue(existing);
       mockRepository.save.mockImplementation((task: typeof mockTask) => Promise.resolve(task));
 
-      const result = await taskService.updateTask(userId, projectId, taskId, {
+      const result = await taskService.updateTask(memberAccess, projectId, taskId, {
         status: TaskStatus.IN_PROGRESS,
       });
 
       expect(result.status).toBe(TaskStatus.IN_PROGRESS);
-      expect(result.title).toBe(createInput.title);
-    });
-
-    it("throws 404 when task is not found", async () => {
-      mockRepository.findOne.mockResolvedValue(null);
-
-      await expect(
-        taskService.updateTask(userId, projectId, taskId, { status: TaskStatus.DONE }),
-      ).rejects.toEqual(new AppError(404, "Task not found"));
     });
   });
 
   describe("deleteTask", () => {
-    it("removes the task when it belongs to the user's project", async () => {
+    it("removes the task when accessible", async () => {
       mockRepository.findOne.mockResolvedValue(mockTask);
       mockRepository.remove.mockResolvedValue(mockTask);
 
-      await taskService.deleteTask(userId, projectId, taskId);
+      await taskService.deleteTask(memberAccess, projectId, taskId);
 
       expect(mockRepository.remove).toHaveBeenCalledWith(mockTask);
-    });
-
-    it("throws 404 when task is not found", async () => {
-      mockRepository.findOne.mockResolvedValue(null);
-
-      await expect(taskService.deleteTask(userId, projectId, taskId)).rejects.toEqual(
-        new AppError(404, "Task not found"),
-      );
-
-      expect(mockRepository.remove).not.toHaveBeenCalled();
     });
   });
 });

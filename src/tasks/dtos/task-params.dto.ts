@@ -1,4 +1,10 @@
 import Joi from "joi";
+import {
+  paginationFields,
+  PaginationQuery,
+  sortingFields,
+  SortQuery,
+} from "../../common/dtos/pagination.dto";
 import { TaskPriority } from "../enums/task-priority.enum";
 import { TaskStatus } from "../enums/task-status.enum";
 
@@ -20,6 +26,9 @@ export const taskParamsSchema = Joi.object({
   }),
 });
 
+export const TASK_SORT_FIELDS = ["title", "status", "priority", "dueDate"] as const;
+export type TaskSortField = (typeof TASK_SORT_FIELDS)[number];
+
 export const listTasksQuerySchema = Joi.object({
   status: Joi.string()
     .valid(...Object.values(TaskStatus))
@@ -33,9 +42,12 @@ export const listTasksQuerySchema = Joi.object({
     .messages({
       "any.only": "Priority must be one of: low, medium, high",
     }),
+  ...paginationFields(),
+  ...sortingFields(TASK_SORT_FIELDS, "dueDate"),
 });
 
-export type ListTasksQuery = {
-  status?: TaskStatus;
-  priority?: TaskPriority;
-};
+export type ListTasksQuery = PaginationQuery &
+  SortQuery<TaskSortField> & {
+    status?: TaskStatus;
+    priority?: TaskPriority;
+  };

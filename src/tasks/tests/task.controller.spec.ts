@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { AppError } from "../../common/filters/error.filter";
+import { UserRole } from "../../users/enums/user-role.enum";
 import { TaskController } from "../controllers/task.controller";
 import { TaskPriority } from "../enums/task-priority.enum";
 import { TaskStatus } from "../enums/task-status.enum";
@@ -53,7 +54,7 @@ describe("TaskController", () => {
 
   const authedRequest = (overrides: Partial<Request> = {}): Request =>
     ({
-      user: { id: userId, email: "jane@example.com" },
+      user: { id: userId, email: "jane@example.com", role: UserRole.MEMBER },
       params: { projectId, taskId },
       query: {},
       body: {},
@@ -81,26 +82,46 @@ describe("TaskController", () => {
 
       await taskController.create(req, res);
 
-      expect(mockedTaskService.createTask).toHaveBeenCalledWith(userId, projectId, req.body);
+      expect(mockedTaskService.createTask).toHaveBeenCalledWith(
+        { userId, role: UserRole.MEMBER },
+        projectId,
+        req.body,
+      );
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(taskResponse);
     });
   });
 
   describe("findAll", () => {
-    it("returns 200 with filtered tasks", async () => {
-      const req = authedRequest({
-        query: { status: TaskStatus.PENDING, priority: TaskPriority.HIGH },
-      });
+    it("returns 200 with paginated filtered tasks", async () => {
+      const query = {
+        status: TaskStatus.PENDING,
+        priority: TaskPriority.HIGH,
+        page: 1,
+        limit: 10,
+        sortBy: "dueDate",
+        sortOrder: "asc",
+      };
+      const req = authedRequest({ query: query as unknown as Request["query"] });
       const res = mockResponse();
 
-      mockedTaskService.findAllByProject.mockResolvedValue([mockTask]);
+      mockedTaskService.findAllByProject.mockResolvedValue({
+        data: [mockTask],
+        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      });
 
       await taskController.findAll(req, res);
 
-      expect(mockedTaskService.findAllByProject).toHaveBeenCalledWith(userId, projectId, req.query);
+      expect(mockedTaskService.findAllByProject).toHaveBeenCalledWith(
+        { userId, role: UserRole.MEMBER },
+        projectId,
+        query,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith([taskResponse]);
+      expect(res.json).toHaveBeenCalledWith({
+        data: [taskResponse],
+        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      });
     });
   });
 
@@ -113,7 +134,11 @@ describe("TaskController", () => {
 
       await taskController.findOne(req, res);
 
-      expect(mockedTaskService.findOneByUser).toHaveBeenCalledWith(userId, projectId, taskId);
+      expect(mockedTaskService.findOneByUser).toHaveBeenCalledWith(
+        { userId, role: UserRole.MEMBER },
+        projectId,
+        taskId,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(taskResponse);
     });
@@ -130,7 +155,7 @@ describe("TaskController", () => {
       await taskController.update(req, res);
 
       expect(mockedTaskService.updateTask).toHaveBeenCalledWith(
-        userId,
+        { userId, role: UserRole.MEMBER },
         projectId,
         taskId,
         req.body,
@@ -149,7 +174,11 @@ describe("TaskController", () => {
 
       await taskController.delete(req, res);
 
-      expect(mockedTaskService.deleteTask).toHaveBeenCalledWith(userId, projectId, taskId);
+      expect(mockedTaskService.deleteTask).toHaveBeenCalledWith(
+        { userId, role: UserRole.MEMBER },
+        projectId,
+        taskId,
+      );
       expect(res.status).toHaveBeenCalledWith(204);
       expect(res.send).toHaveBeenCalled();
     });

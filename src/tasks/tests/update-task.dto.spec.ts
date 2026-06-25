@@ -29,19 +29,49 @@ describe("listTasksQuerySchema", () => {
     expect(value).toEqual({
       status: TaskStatus.PENDING,
       priority: TaskPriority.LOW,
+      page: 1,
+      limit: 10,
+      sortBy: "dueDate",
+      sortOrder: "asc",
     });
   });
 
-  it("accepts an empty query", () => {
+  it("accepts an empty query with pagination defaults", () => {
     const { error, value } = listTasksQuerySchema.validate({});
 
     expect(error).toBeUndefined();
-    expect(value).toEqual({});
+    expect(value).toEqual({
+      page: 1,
+      limit: 10,
+      sortBy: "dueDate",
+      sortOrder: "asc",
+    });
+  });
+
+  it("coerces string query params for pagination", () => {
+    const { error, value } = listTasksQuerySchema.validate({
+      page: "2",
+      limit: "25",
+    });
+
+    expect(error).toBeUndefined();
+    expect(value).toEqual({
+      page: 2,
+      limit: 25,
+      sortBy: "dueDate",
+      sortOrder: "asc",
+    });
   });
 
   it("rejects invalid filter values", () => {
     const { error } = listTasksQuerySchema.validate({ status: "invalid" });
 
     expect(error?.message).toContain("Status must be one of");
+  });
+
+  it("rejects invalid sort field", () => {
+    const { error } = listTasksQuerySchema.validate({ sortBy: "invalid" });
+
+    expect(error?.message).toContain("Sort field must be one of");
   });
 });
