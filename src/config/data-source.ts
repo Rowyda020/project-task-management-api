@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { DataSource } from "typeorm";
 import { User } from "../users/models/user.entity";
-
+import { Project } from "../projects/models/project.entity";
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -19,6 +19,6 @@ export const dataSource = new DataSource({
   username: requireEnv("DB_USERNAME"),
   password: requireEnv("DB_PASSWORD"),
   database: requireEnv("DB_NAME"),
-  entities: [User],
+  entities: [User, Project],
   synchronize: process.env.NODE_ENV !== "production",
 });
