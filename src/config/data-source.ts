@@ -21,5 +21,6 @@ export const dataSource = new DataSource({
   password: requireEnv("DB_PASSWORD"),
   database: requireEnv("DB_NAME"),
   entities: [User, Project, Task],
-  synchronize: process.env.NODE_ENV !== "production",
+  migrations: [`${__dirname}/../database/migrations/*.{ts,js}`],
+  synchronize: false,
 });
