@@ -3,6 +3,7 @@ import swaggerUi from "swagger-ui-express";
 import authRoutes from "./auth/routes/auth.routes";
 import projectRoutes from "./projects/routes/project.routes";
 import taskRoutes from "./tasks/routes/task.routes";
+import adminRoutes from "./users/routes/admin.routes";
 import { errorFilter } from "./common/filters/error.filter";
 import { requireAuthUnlessPublic } from "./common/guards/auth.guard";
 import { swaggerSpec } from "./config/swagger";
@@ -29,6 +30,8 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/auth", authRoutes);
+
+app.use("/admin", adminRoutes);
 
 app.use("/projects", projectRoutes);
 app.use("/projects/:projectId/tasks", taskRoutes);
