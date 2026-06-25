@@ -110,6 +110,63 @@ const options: swaggerJsdoc.Options = {
             },
           },
         },
+        CreateTaskRequest: {
+          type: "object",
+          required: ["title", "description", "status", "priority", "dueDate"],
+          properties: {
+            title: { type: "string", maxLength: 255, example: "Design homepage" },
+            description: { type: "string", example: "Create wireframes and mockups" },
+            status: {
+              type: "string",
+              enum: ["pending", "in progress", "done"],
+              example: "pending",
+            },
+            priority: {
+              type: "string",
+              enum: ["low", "medium", "high"],
+              example: "high",
+            },
+            dueDate: { type: "string", format: "date-time", example: "2026-12-31T00:00:00.000Z" },
+          },
+        },
+        UpdateTaskRequest: {
+          type: "object",
+          minProperties: 1,
+          properties: {
+            title: { type: "string", maxLength: 255, example: "Design homepage v2" },
+            description: { type: "string", example: "Updated scope" },
+            status: {
+              type: "string",
+              enum: ["pending", "in progress", "done"],
+              example: "in progress",
+            },
+            priority: {
+              type: "string",
+              enum: ["low", "medium", "high"],
+              example: "medium",
+            },
+            dueDate: { type: "string", format: "date-time", example: "2026-12-31T00:00:00.000Z" },
+          },
+        },
+        TaskResponse: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            title: { type: "string", example: "Design homepage" },
+            description: { type: "string", example: "Create wireframes and mockups" },
+            status: {
+              type: "string",
+              enum: ["pending", "in progress", "done"],
+              example: "pending",
+            },
+            priority: {
+              type: "string",
+              enum: ["low", "medium", "high"],
+              example: "high",
+            },
+            dueDate: { type: "string", format: "date-time", example: "2026-12-31T00:00:00.000Z" },
+          },
+        },
       },
     },
   },
