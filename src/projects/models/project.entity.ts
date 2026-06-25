@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from "typeorm";
 import { User } from "../../users/models/user.entity";
+import { Task } from "../../tasks/models/task.entity";
 import { ProjectStatus } from "../enums/project-status.enum";
 
 @Entity("projects")
@@ -19,4 +20,6 @@ export class Project {
   @ManyToOne(() => User, (user) => user.projects)
   user!: User;
 
+  @OneToMany(() => Task, (task) => task.project)
+  tasks!: Task[];
 }
