@@ -1,4 +1,4 @@
-import { loginSchema } from "./login.dto";
+import { loginSchema } from "../dto/login.dto";
 
 const validPassword = "Password1!";
 

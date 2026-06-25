@@ -1,26 +1,26 @@
-import { registerSchema } from "../dto/register.dto";
+import { registerSchema } from "./register.dto";
 
 const validPassword = "Password1!";
 
 describe("registerSchema", () => {
   it("accepts valid registration input", () => {
     const { error, value } = registerSchema.validate({
-      name: "Jane Doe",
-      email: "jane@example.com",
+      name: "test user",
+      email: "test@gmail.com",
       password: validPassword,
     });
 
     expect(error).toBeUndefined();
     expect(value).toEqual({
-      name: "Jane Doe",
-      email: "jane@example.com",
+      name: "test user",
+      email: "test@gmail.com",
       password: validPassword,
     });
   });
 
   it("rejects missing name", () => {
     const { error } = registerSchema.validate({
-      email: "jane@example.com",
+      email: "test@gmail.com",
       password: validPassword,
     });
 
@@ -29,7 +29,7 @@ describe("registerSchema", () => {
 
   it("rejects invalid email", () => {
     const { error } = registerSchema.validate({
-      name: "Jane Doe",
+      name: "test user",
       email: "not-an-email",
       password: validPassword,
     });
@@ -39,8 +39,8 @@ describe("registerSchema", () => {
 
   it("rejects weak passwords", () => {
     const { error } = registerSchema.validate({
-      name: "Jane Doe",
-      email: "jane@example.com",
+      name: "test user",
+      email: "test@gmail.com",
       password: "password",
     });
 

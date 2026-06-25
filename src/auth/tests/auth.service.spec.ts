@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { AppError } from "../../common/filters/error.filter";
 import { usersService } from "../../users/services/users.service";
-import { AuthService } from "./auth.service";
+import { AuthService } from "../services/auth.service";
 
 jest.mock("../../users/services/users.service", () => ({
   usersService: {
@@ -77,6 +77,7 @@ describe("AuthService", () => {
         email: registerInput.email,
         password: "hashed-password",
         createdAt: new Date(),
+        projects: [],
       });
 
       await expect(authService.register(registerInput)).rejects.toEqual(
@@ -95,6 +96,7 @@ describe("AuthService", () => {
       email: loginInput.email,
       password: "hashed-password",
       createdAt: new Date(),
+      projects: [],
     };
 
     it("returns an access token for valid credentials", async () => {

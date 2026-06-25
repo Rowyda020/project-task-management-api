@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AuthController } from "./auth.controller";
+import { AuthController } from "../controllers/auth.controller";
 import { authService } from "../services/auth.service";
 
 jest.mock("../services/auth.service", () => ({
@@ -29,16 +29,16 @@ describe("AuthController", () => {
     it("returns 201 with the created user", async () => {
       const req = {
         body: {
-          name: "Jane Doe",
-          email: "jane@example.com",
+          name: "test user",
+          email: "test@gmail.com",
           password: "Password1!",
         },
       } as Request;
       const res = mockResponse();
       const createdUser = {
         id: "user-id",
-        name: "Jane Doe",
-        email: "jane@example.com",
+        name: "test user",
+        email: "test@gmail.com",
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
       };
 
@@ -56,7 +56,7 @@ describe("AuthController", () => {
     it("returns 200 with an access token", async () => {
       const req = {
         body: {
-          email: "jane@example.com",
+          email: "test@gmail.com",
           password: "Password1!",
         },
       } as Request;
