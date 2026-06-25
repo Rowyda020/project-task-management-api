@@ -45,6 +45,7 @@ export function validateQuery(schema: Joi.ObjectSchema) {
     const { error, value } = schema.validate(req.query, {
       abortEarly: false,
       stripUnknown: true,
+      convert: true,
     });
 
     if (error) {

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { AppError } from "../../common/filters/error.filter";
+import { UserRole } from "../../users/enums/user-role.enum";
 import { ProjectController } from "../controllers/project.controller";
 import { ProjectStatus } from "../enums/project-status.enum";
 import { Project } from "../models/project.entity";
@@ -8,8 +9,8 @@ import { projectService } from "../services/project.service";
 jest.mock("../services/project.service", () => ({
   projectService: {
     createProject: jest.fn(),
-    findAllByUserId: jest.fn(),
-    findOneByUserId: jest.fn(),
+    findAll: jest.fn(),
+    findOne: jest.fn(),
     updateProject: jest.fn(),
     deleteProject: jest.fn(),
   },
@@ -47,7 +48,7 @@ describe("ProjectController", () => {
 
   const authedRequest = (overrides: Partial<Request> = {}): Request =>
     ({
-      user: { id: userId, email: "jane@example.com" },
+      user: { id: userId, email: "jane@example.com", role: UserRole.MEMBER },
       params: { id: projectId },
       body: {},
       ...overrides,
@@ -72,7 +73,10 @@ describe("ProjectController", () => {
 
       await projectController.create(req, res);
 
-      expect(mockedProjectService.createProject).toHaveBeenCalledWith(userId, req.body);
+      expect(mockedProjectService.createProject).toHaveBeenCalledWith(
+        { userId, role: UserRole.MEMBER },
+        req.body,
+      );
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(projectResponse);
     });
@@ -88,17 +92,32 @@ describe("ProjectController", () => {
   });
 
   describe("findAll", () => {
-    it("returns 200 with a list of projects", async () => {
-      const req = authedRequest();
+    it("returns 200 with a paginated list of projects", async () => {
+      const query = {
+        page: 1,
+        limit: 10,
+        sortBy: "title",
+        sortOrder: "asc",
+      };
+      const req = authedRequest({ query: query as unknown as Request["query"] });
       const res = mockResponse();
 
-      mockedProjectService.findAllByUserId.mockResolvedValue([mockProject]);
+      mockedProjectService.findAll.mockResolvedValue({
+        data: [mockProject],
+        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      });
 
       await projectController.findAll(req, res);
 
-      expect(mockedProjectService.findAllByUserId).toHaveBeenCalledWith(userId);
+      expect(mockedProjectService.findAll).toHaveBeenCalledWith(
+        { userId, role: UserRole.MEMBER },
+        query,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith([projectResponse]);
+      expect(res.json).toHaveBeenCalledWith({
+        data: [projectResponse],
+        meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
+      });
     });
   });
 
@@ -107,11 +126,14 @@ describe("ProjectController", () => {
       const req = authedRequest();
       const res = mockResponse();
 
-      mockedProjectService.findOneByUserId.mockResolvedValue(mockProject);
+      mockedProjectService.findOne.mockResolvedValue(mockProject);
 
       await projectController.findOne(req, res);
 
-      expect(mockedProjectService.findOneByUserId).toHaveBeenCalledWith(userId, projectId);
+      expect(mockedProjectService.findOne).toHaveBeenCalledWith(
+        { userId, role: UserRole.MEMBER },
+        projectId,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(projectResponse);
     });
@@ -128,7 +150,7 @@ describe("ProjectController", () => {
       await projectController.update(req, res);
 
       expect(mockedProjectService.updateProject).toHaveBeenCalledWith(
-        userId,
+        { userId, role: UserRole.MEMBER },
         projectId,
         req.body,
       );
@@ -149,7 +171,10 @@ describe("ProjectController", () => {
 
       await projectController.delete(req, res);
 
-      expect(mockedProjectService.deleteProject).toHaveBeenCalledWith(userId, projectId);
+      expect(mockedProjectService.deleteProject).toHaveBeenCalledWith(
+        { userId, role: UserRole.MEMBER },
+        projectId,
+      );
       expect(res.status).toHaveBeenCalledWith(204);
       expect(res.send).toHaveBeenCalled();
     });

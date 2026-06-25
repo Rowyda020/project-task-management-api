@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { asyncHandler } from "../../common/middleware/async-handler";
-import { validate, validateParams } from "../../common/middleware/validate";
+import { validate, validateParams, validateQuery } from "../../common/middleware/validate";
 import { projectController } from "../controllers/project.controller";
 import { createProjectSchema } from "../dtos/create-project.dto";
+import { listProjectsQuerySchema } from "../dtos/list-projects-query.dto";
 import { projectParamsSchema } from "../dtos/project-params.dto";
 import { updateProjectSchema } from "../dtos/update-project.dto";
 
@@ -40,16 +41,44 @@ projectRoutes.post(
  *     tags: [Projects]
  *     summary: List my projects
  *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [title, status]
+ *           default: title
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: asc
  *     responses:
  *       200:
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/ProjectResponse'
+ *               $ref: '#/components/schemas/PaginatedProjectsResponse'
  */
-projectRoutes.get("/", asyncHandler((req, res) => projectController.findAll(req, res)));
+projectRoutes.get(
+  "/",
+  validateQuery(listProjectsQuerySchema),
+  asyncHandler((req, res) => projectController.findAll(req, res)),
+);
 
 /**
  * @openapi

@@ -1,16 +1,12 @@
 import { Request, Response } from "express";
+import { mapPaginatedResult } from "../../common/dtos/pagination.dto";
+import { getAccessContext } from "../../common/types/access-context";
 import { AppError } from "../../common/filters/error.filter";
 import { Project } from "../models/project.entity";
 import { CreateProjectInput } from "../dtos/create-project.dto";
+import { ListProjectsQuery } from "../dtos/list-projects-query.dto";
 import { UpdateProjectInput } from "../dtos/update-project.dto";
 import { projectService } from "../services/project.service";
-
-function getUserId(req: Request): string {
-  if (!req.user?.id) {
-    throw new AppError(401, "Unauthorized");
-  }
-  return req.user.id;
-}
 
 function getProjectId(req: Request): string {
   const { id } = req.params;
@@ -28,29 +24,31 @@ function toProjectResponse(project: Project) {
     status: project.status,
   };
 }
-
 export class ProjectController {
   async create(req: Request, res: Response): Promise<void> {
     const project = await projectService.createProject(
-      getUserId(req),
+      getAccessContext(req),
       req.body as CreateProjectInput,
     );
     res.status(201).json(toProjectResponse(project));
   }
 
   async findAll(req: Request, res: Response): Promise<void> {
-    const projects = await projectService.findAllByUserId(getUserId(req));
-    res.status(200).json(projects.map(toProjectResponse));
+    const result = await projectService.findAll(
+      getAccessContext(req),
+      req.query as unknown as ListProjectsQuery,
+    );
+    res.status(200).json(mapPaginatedResult(result, toProjectResponse));
   }
 
   async findOne(req: Request, res: Response): Promise<void> {
-    const project = await projectService.findOneByUserId(getUserId(req), getProjectId(req));
+    const project = await projectService.findOne(getAccessContext(req), getProjectId(req));
     res.status(200).json(toProjectResponse(project));
   }
 
   async update(req: Request, res: Response): Promise<void> {
     const project = await projectService.updateProject(
-      getUserId(req),
+      getAccessContext(req),
       getProjectId(req),
       req.body as UpdateProjectInput,
     );
@@ -58,7 +56,7 @@ export class ProjectController {
   }
 
   async delete(req: Request, res: Response): Promise<void> {
-    await projectService.deleteProject(getUserId(req), getProjectId(req));
+    await projectService.deleteProject(getAccessContext(req), getProjectId(req));
     res.status(204).send();
   }
 }
