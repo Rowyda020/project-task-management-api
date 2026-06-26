@@ -2,7 +2,7 @@ import "reflect-metadata";
 import "dotenv/config";
 import { app } from "./app";
 import { dataSource } from "./config/data-source";
-import { seedAdminUser } from "./database/seed-admin";
+import { seedAdminUser } from "./database/seeds";
 
 const PORT = Number(process.env.PORT) || 3000;
 

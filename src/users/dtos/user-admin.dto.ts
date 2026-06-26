@@ -21,3 +21,7 @@ export const updateUserRoleSchema = Joi.object({
 export type UpdateUserRoleInput = {
   role: UserRole;
 };
+
+export type UserParams = {
+  id: string;
+};

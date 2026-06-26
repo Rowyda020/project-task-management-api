@@ -6,3 +6,7 @@ export const projectParamsSchema = Joi.object({
     "any.required": "Project id is required",
   }),
 });
+
+export type ProjectParams = {
+  id: string;
+};

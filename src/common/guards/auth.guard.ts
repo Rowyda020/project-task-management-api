@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "../filters/error.filter";
+import { requireEnv } from "../utils/require-env";
 import { UserRole } from "../../users/enums/user-role.enum";
 
 type AccessTokenPayload = {
@@ -8,14 +9,6 @@ type AccessTokenPayload = {
   email: string;
   role?: UserRole;
 };
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing environment variable: ${name}`);
-  }
-  return value;
-}
 
 export function authGuard(req: Request, _res: Response, next: NextFunction): void {
   try {

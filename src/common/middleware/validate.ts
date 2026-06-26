@@ -1,6 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import Joi from "joi";
 import { AppError } from "../filters/error.filter";
+import {
+  cloneRecord,
+  setValidatedBody,
+  setValidatedParams,
+  setValidatedQuery,
+} from "./validated-request";
 
 function formatValidationError(error: Joi.ValidationError): AppError {
   return new AppError(400, error.details.map((d) => d.message).join(", "));
@@ -8,7 +14,7 @@ function formatValidationError(error: Joi.ValidationError): AppError {
 
 export function validate(schema: Joi.ObjectSchema) {
   return (req: Request, _res: Response, next: NextFunction): void => {
-    const { error, value } = schema.validate(req.body, {
+    const { error, value } = schema.validate(cloneRecord(req.body), {
       abortEarly: false,
       stripUnknown: true,
     });
@@ -18,14 +24,14 @@ export function validate(schema: Joi.ObjectSchema) {
       return;
     }
 
-    req.body = value;
+    setValidatedBody(req, value);
     next();
   };
 }
 
 export function validateParams(schema: Joi.ObjectSchema) {
   return (req: Request, _res: Response, next: NextFunction): void => {
-    const { error, value } = schema.validate(req.params, {
+    const { error, value } = schema.validate(cloneRecord(req.params), {
       abortEarly: false,
       stripUnknown: true,
     });
@@ -35,14 +41,14 @@ export function validateParams(schema: Joi.ObjectSchema) {
       return;
     }
 
-    req.params = value;
+    setValidatedParams(req, value);
     next();
   };
 }
 
 export function validateQuery(schema: Joi.ObjectSchema) {
   return (req: Request, _res: Response, next: NextFunction): void => {
-    const { error, value } = schema.validate(req.query, {
+    const { error, value } = schema.validate(cloneRecord(req.query), {
       abortEarly: false,
       stripUnknown: true,
       convert: true,
@@ -53,7 +59,7 @@ export function validateQuery(schema: Joi.ObjectSchema) {
       return;
     }
 
-    req.query = value;
+    setValidatedQuery(req, value);
     next();
   };
 }

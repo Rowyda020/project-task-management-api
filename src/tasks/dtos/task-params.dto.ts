@@ -51,3 +51,12 @@ export type ListTasksQuery = PaginationQuery &
     status?: TaskStatus;
     priority?: TaskPriority;
   };
+
+export type TaskProjectParams = {
+  projectId: string;
+};
+
+export type TaskParams = {
+  projectId: string;
+  taskId: string;
+};

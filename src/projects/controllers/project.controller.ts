@@ -1,19 +1,20 @@
 import { Request, Response } from "express";
 import { mapPaginatedResult } from "../../common/dtos/pagination.dto";
+import {
+  getValidatedBody,
+  getValidatedParams,
+  getValidatedQuery,
+} from "../../common/middleware/validated-request";
 import { getAccessContext } from "../../common/types/access-context";
-import { AppError } from "../../common/filters/error.filter";
-import { Project } from "../models/project.entity";
 import { CreateProjectInput } from "../dtos/create-project.dto";
 import { ListProjectsQuery } from "../dtos/list-projects-query.dto";
+import { ProjectParams } from "../dtos/project-params.dto";
 import { UpdateProjectInput } from "../dtos/update-project.dto";
+import { Project } from "../models/project.entity";
 import { projectService } from "../services/project.service";
 
 function getProjectId(req: Request): string {
-  const { id } = req.params;
-  if (typeof id !== "string") {
-    throw new AppError(400, "Project id must be a valid UUID");
-  }
-  return id;
+  return getValidatedParams<ProjectParams>(req).id;
 }
 
 function toProjectResponse(project: Project) {
@@ -24,11 +25,12 @@ function toProjectResponse(project: Project) {
     status: project.status,
   };
 }
+
 export class ProjectController {
   async create(req: Request, res: Response): Promise<void> {
     const project = await projectService.createProject(
       getAccessContext(req),
-      req.body as CreateProjectInput,
+      getValidatedBody<CreateProjectInput>(req),
     );
     res.status(201).json(toProjectResponse(project));
   }
@@ -36,7 +38,7 @@ export class ProjectController {
   async findAll(req: Request, res: Response): Promise<void> {
     const result = await projectService.findAll(
       getAccessContext(req),
-      req.query as unknown as ListProjectsQuery,
+      getValidatedQuery<ListProjectsQuery>(req),
     );
     res.status(200).json(mapPaginatedResult(result, toProjectResponse));
   }
@@ -50,7 +52,7 @@ export class ProjectController {
     const project = await projectService.updateProject(
       getAccessContext(req),
       getProjectId(req),
-      req.body as UpdateProjectInput,
+      getValidatedBody<UpdateProjectInput>(req),
     );
     res.status(200).json(toProjectResponse(project));
   }
