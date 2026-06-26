@@ -1,26 +1,41 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
+async function createEnumIfNotExists(
+  queryRunner: QueryRunner,
+  name: string,
+  values: string[],
+): Promise<void> {
+  const literals = values.map((value) => `'${value.replace(/'/g, "''")}'`).join(", ");
+  await queryRunner.query(`
+    DO $$ BEGIN
+      CREATE TYPE "public"."${name}" AS ENUM(${literals});
+    EXCEPTION
+      WHEN duplicate_object THEN NULL;
+    END $$;
+  `);
+}
+
 export class InitialSchema1740500000000 implements MigrationInterface {
   name = "InitialSchema1740500000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
 
-    await queryRunner.query(
-      `CREATE TYPE "public"."projects_status_enum" AS ENUM('in progress', 'completed', 'cancelled')`,
-    );
-    await queryRunner.query(
-      `CREATE TYPE "public"."tasks_priority_enum" AS ENUM('low', 'medium', 'high')`,
-    );
-    await queryRunner.query(
-      `CREATE TYPE "public"."tasks_status_enum" AS ENUM('pending', 'in progress', 'done')`,
-    );
-    await queryRunner.query(
-      `CREATE TYPE "public"."users_role_enum" AS ENUM('admin', 'member')`,
-    );
+    await createEnumIfNotExists(queryRunner, "projects_status_enum", [
+      "in progress",
+      "completed",
+      "cancelled",
+    ]);
+    await createEnumIfNotExists(queryRunner, "tasks_priority_enum", ["low", "medium", "high"]);
+    await createEnumIfNotExists(queryRunner, "tasks_status_enum", [
+      "pending",
+      "in progress",
+      "done",
+    ]);
+    await createEnumIfNotExists(queryRunner, "users_role_enum", ["admin", "member"]);
 
     await queryRunner.query(`
-      CREATE TABLE "users" (
+      CREATE TABLE IF NOT EXISTS "users" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "name" character varying NOT NULL,
         "email" character varying NOT NULL,
@@ -33,7 +48,7 @@ export class InitialSchema1740500000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "projects" (
+      CREATE TABLE IF NOT EXISTS "projects" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "title" character varying(255) NOT NULL,
         "description" text NOT NULL,
@@ -44,7 +59,7 @@ export class InitialSchema1740500000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "tasks" (
+      CREATE TABLE IF NOT EXISTS "tasks" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "title" character varying(255) NOT NULL,
         "description" text NOT NULL,
@@ -57,31 +72,39 @@ export class InitialSchema1740500000000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      ALTER TABLE "projects"
-      ADD CONSTRAINT "FK_361a53ae58ef7034adc3c06f09f"
-      FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+      DO $$ BEGIN
+        ALTER TABLE "projects"
+        ADD CONSTRAINT "FK_361a53ae58ef7034adc3c06f09f"
+        FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
     `);
 
     await queryRunner.query(`
-      ALTER TABLE "tasks"
-      ADD CONSTRAINT "FK_e08fca67ca8966e6b9914bf2956"
-      FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+      DO $$ BEGIN
+        ALTER TABLE "tasks"
+        ADD CONSTRAINT "FK_e08fca67ca8966e6b9914bf2956"
+        FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
     `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "tasks" DROP CONSTRAINT "FK_e08fca67ca8966e6b9914bf2956"`,
+      `ALTER TABLE "tasks" DROP CONSTRAINT IF EXISTS "FK_e08fca67ca8966e6b9914bf2956"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "projects" DROP CONSTRAINT "FK_361a53ae58ef7034adc3c06f09f"`,
+      `ALTER TABLE "projects" DROP CONSTRAINT IF EXISTS "FK_361a53ae58ef7034adc3c06f09f"`,
     );
-    await queryRunner.query(`DROP TABLE "tasks"`);
-    await queryRunner.query(`DROP TABLE "projects"`);
-    await queryRunner.query(`DROP TABLE "users"`);
-    await queryRunner.query(`DROP TYPE "public"."users_role_enum"`);
-    await queryRunner.query(`DROP TYPE "public"."tasks_status_enum"`);
-    await queryRunner.query(`DROP TYPE "public"."tasks_priority_enum"`);
-    await queryRunner.query(`DROP TYPE "public"."projects_status_enum"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "tasks"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "projects"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "users"`);
+    await queryRunner.query(`DROP TYPE IF EXISTS "public"."users_role_enum"`);
+    await queryRunner.query(`DROP TYPE IF EXISTS "public"."tasks_status_enum"`);
+    await queryRunner.query(`DROP TYPE IF EXISTS "public"."tasks_priority_enum"`);
+    await queryRunner.query(`DROP TYPE IF EXISTS "public"."projects_status_enum"`);
   }
 }
