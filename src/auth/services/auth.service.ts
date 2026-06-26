@@ -1,18 +1,11 @@
 import bcrypt from "bcrypt";
 import jwt, { SignOptions } from "jsonwebtoken";
 import { AppError } from "../../common/filters/error.filter";
+import { requireEnv } from "../../common/utils/require-env";
 import { UserRole } from "../../users/enums/user-role.enum";
 import { usersService } from "../../users/services/users.service";
-import { LoginInput } from "../dto/login.dto";
-import { RegisterInput } from "../dto/register.dto";
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing environment variable: ${name}`);
-  }
-  return value;
-}
+import { LoginInput } from "../dtos/login.dto";
+import { RegisterInput } from "../dtos/register.dto";
 
 function getSaltRounds(): number {
   return parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10);

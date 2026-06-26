@@ -1,4 +1,4 @@
-import { registerSchema } from "../dto/register.dto";
+import { registerSchema } from "../dtos/register.dto";
 
 const validPassword = "Password1!";
 

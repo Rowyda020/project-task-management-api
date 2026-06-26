@@ -2,8 +2,9 @@ import { Router } from "express";
 import { asyncHandler } from "../../common/middleware/async-handler";
 import { validate } from "../../common/middleware/validate";
 import { authController } from "../controllers/auth.controller";
-import { loginSchema } from "../dto/login.dto";
-import { registerSchema } from "../dto/register.dto";
+import { loginRateLimiter, registerRateLimiter } from "../../common/middleware/rate-limit";
+import { loginSchema } from "../dtos/login.dto";
+import { registerSchema } from "../dtos/register.dto";
 
 const authRoutes = Router();
 
@@ -24,9 +25,12 @@ const authRoutes = Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/UserResponse'
+ *       429:
+ *         description: Too many registration attempts
  */
 authRoutes.post(
   "/register",
+  registerRateLimiter,
   validate(registerSchema),
   asyncHandler((req, res) => authController.register(req, res)),
 );
@@ -48,9 +52,12 @@ authRoutes.post(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/LoginResponse'
+ *       429:
+ *         description: Too many login attempts
  */
 authRoutes.post(
   "/login",
+  loginRateLimiter,
   validate(loginSchema),
   asyncHandler((req, res) => authController.login(req, res)),
 );
