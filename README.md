@@ -66,6 +66,10 @@ cp .env.example .env
 | `SEED_ADMIN_EMAIL` | If seeding | — | Email for the seeded admin |
 | `SEED_ADMIN_PASSWORD` | If seeding | — | Password for the seeded admin |
 | `SEED_ADMIN_NAME` | No | `Admin` | Display name for the seeded admin |
+| `AUTH_LOGIN_RATE_LIMIT_MAX` | No | `10` | Max failed login attempts per IP per window |
+| `AUTH_LOGIN_RATE_LIMIT_WINDOW_MS` | No | `900000` | Login rate-limit window in ms (15 min) |
+| `AUTH_REGISTER_RATE_LIMIT_MAX` | No | `5` | Max registration attempts per IP per window |
+| `AUTH_REGISTER_RATE_LIMIT_WINDOW_MS` | No | `3600000` | Register rate-limit window in ms (1 hour) |
 
 ## Running Locally
 
@@ -267,9 +271,22 @@ src/
 ├── tasks/         # Task CRUD (nested under projects)
 ├── common/        # Guards, DTOs, middleware, error handling
 ├── config/        # DataSource, Swagger
-└── database/      # Migrations and seed scripts
+└── database/      # Migrations, seeds, and DB runners
+    ├── migrations/
+    ├── seeds/
+    │   ├── data/      # Seed configuration and defaults
+    │   └── seeders/   # Seed execution logic
+    ├── run-migrations.ts
+    └── seeds/run-seeds.ts
 ```
 
 ### Error Handling
 
 - Validation errors and application errors are returned as JSON with appropriate HTTP status codes via a centralized error filter.
+- Validated request data is stored separately from Express read-only `req.query` / `req.params` (Express 5 compatibility).
+
+### Rate Limiting
+
+- `/auth/login` and `/auth/register` are rate-limited per IP.
+- Failed logins count toward the limit; successful logins do not.
+- Returns `429 Too many requests` when exceeded.
