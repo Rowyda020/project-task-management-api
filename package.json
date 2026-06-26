@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
+    "prestart": "npm run build",
     "start": "node dist/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -19,7 +20,7 @@
     "migration:run": "npm run build && node dist/database/run-migrations.js",
     "migration:revert": "npm run build && node dist/database/run-migrations.js --revert",
     "migration:generate": "npm run build && typeorm migration:generate -d dist/config/data-source.js",
-    "seed": "npm run build && node dist/database/run-seed.js"
+    "seed": "npm run build && node dist/database/seeds/run-seeds.js"
   },
   "repository": {
     "type": "git",
@@ -54,6 +55,7 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
     "joi": "^18.2.3",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.22.0",

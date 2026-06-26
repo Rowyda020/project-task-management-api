@@ -9,6 +9,8 @@ import { requireAuthUnlessPublic } from "./common/guards/auth.guard";
 import { swaggerSpec } from "./config/swagger";
 export const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(requireAuthUnlessPublic);
 
