@@ -1,24 +1,19 @@
 import bcrypt from "bcrypt";
 import { DataSource } from "typeorm";
-import { UserRole } from "../users/enums/user-role.enum";
-import { User } from "../users/models/user.entity";
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing environment variable: ${name}`);
-  }
-  return value;
-}
+import { requireEnv } from "../../../common/utils/require-env";
+import { UserRole } from "../../../users/enums/user-role.enum";
+import { User } from "../../../users/models/user.entity";
+import { adminUserSeedData } from "../data/admin-user.seed-data";
 
 function getSaltRounds(): number {
   return parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10);
 }
 
 export async function seedAdminUser(dataSource: DataSource): Promise<void> {
-  const email = requireEnv("SEED_ADMIN_EMAIL");
-  const password = requireEnv("SEED_ADMIN_PASSWORD");
-  const name = process.env.SEED_ADMIN_NAME || "Admin";
+  const email = requireEnv(adminUserSeedData.envKeys.email);
+  const password = requireEnv(adminUserSeedData.envKeys.password);
+  const name =
+    process.env[adminUserSeedData.envKeys.name] ?? adminUserSeedData.defaultName;
 
   const userRepository = dataSource.getRepository(User);
   const existingUser = await userRepository.findOne({ where: { email } });
